@@ -79,8 +79,13 @@ unsigned int Shader::CreateShader(const std::string& vertexShader, const std::st
 }
 
 int Shader::GetUniformLocation(const std::string& name) {
+	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end()) {
+		return m_UniformLocationCache[name];
+	}
+
 	GLCALL(int location = glGetUniformLocation(m_RendererID, name.c_str()));
 	ASSERT(location != -1);
+	m_UniformLocationCache[name] = location;
 	return location;
 }
 
