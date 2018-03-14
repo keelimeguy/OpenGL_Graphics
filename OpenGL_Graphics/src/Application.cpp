@@ -1,3 +1,5 @@
+// Useful documentation website: docs.gl
+
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
 
@@ -105,6 +107,7 @@ int main() {
 	}
 
 	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);
 
 	if (glewInit() != GLEW_OK)
 		return -1;
@@ -141,12 +144,26 @@ int main() {
 	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 	glUseProgram(shader);
 
+	int location = glGetUniformLocation(shader, "u_Color");
+	ASSERT(location != -1);
+
+	float r = 0.0f;
+	float increment = 0.05f;
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 	
-		GLCALL(
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-		);
+		glUniform4f(location, r, 1.0f - r, 0.0f, 1.0f);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+		r += increment;
+		if (r > 1.0f) {
+			increment = -0.05f;
+			r = 1.0f;
+		}
+		else if (r < 0.0f) {
+			increment = 0.05f;
+			r = 0.0f;
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
