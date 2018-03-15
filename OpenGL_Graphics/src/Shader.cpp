@@ -56,7 +56,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 		GLCALL(glGetShaderInfoLog(id, length, &length, message));
 		std::cout << message << std::endl;
 		GLCALL(glDeleteShader(id));
-		return 0;
+		ASSERT(false);
 	}
 
 	return id;
@@ -84,9 +84,15 @@ int Shader::GetUniformLocation(const std::string& name) {
 	}
 
 	GLCALL(int location = glGetUniformLocation(m_RendererID, name.c_str()));
-	ASSERT(location != -1);
+	if (location == -1) {
+		std::cout << "Warning: Uniform " << name << " not found." << std::endl;
+	}
 	m_UniformLocationCache[name] = location;
 	return location;
+}
+
+void Shader::SetUniform1i(const std::string& name, int i0) {
+	GLCALL(glUniform1i(GetUniformLocation(name), i0));
 }
 
 void Shader::SetUniform4f(const std::string& name, float f0, float f1, float f2, float f3) {

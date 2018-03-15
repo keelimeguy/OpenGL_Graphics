@@ -9,6 +9,7 @@
 #include "VertexArray.h"
 #include "VertexBufferLayout.h"
 #include "Shader.h"
+#include "Texture.h"
 
 #include <iostream>
 
@@ -22,7 +23,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	window = glfwCreateWindow(640, 480, "OpenGL_Testing", NULL, NULL);
+	window = glfwCreateWindow(640, 640, "OpenGL_Testing", NULL, NULL);
 	if (!window) {
 		glfwTerminate();
 		return -1;
@@ -40,10 +41,10 @@ int main() {
 	// This scope is used to do that.
 	{
 		float positions[] = {
-			-0.5f, -0.5f, // 0
-			0.5f, -0.5f,  // 1
-			0.5f, 0.5f,   // 2
-			-0.5f, 0.5f,  // 3
+			-0.5f, -0.5f, 0.0f, 0.0f, // 0
+			0.5f, -0.5f, 1.0f, 0.0f,  // 1
+			0.5f, 0.5f, 1.0f, 1.0f,   // 2
+			-0.5f, 0.5f, 0.0f, 1.0f,  // 3
 		};
 
 		// Index buffer for square (two triangles)
@@ -52,20 +53,30 @@ int main() {
 			2, 3, 0
 		};
 
+		GLCALL(glEnable(GL_BLEND));
+		GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
 		VertexArray va;
-		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 		VertexBufferLayout layout;
+		layout.Push<float>(2);
 		layout.Push<float>(2);
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices, 6);
 
 		Shader shader("res/shaders/Basic.shader");
+		shader.Bind();
+
+		Texture texture("res/textures/star.png");
+		texture.Bind();
+		shader.SetUniform1i("u_Texture", 0);
 
 		va.Unbind();
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
+		texture.Unbind();
 
 		Renderer renderer;
 
@@ -74,6 +85,7 @@ int main() {
 		while (!glfwWindowShouldClose(window)) {
 			renderer.Clear();
 
+			texture.Bind();
 			shader.Bind();
 			shader.SetUniform4f("u_Color", r, 1.0f - r, 0.0f, 1.0f);
 
