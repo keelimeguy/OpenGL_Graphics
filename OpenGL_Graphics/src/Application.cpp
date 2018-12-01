@@ -1,6 +1,6 @@
 // Useful documentation website: docs.gl
 
-#include <GL\glew.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "Renderer.h"
@@ -11,8 +11,12 @@
 #include "Shader.h"
 #include "Texture.h"
 
-#include "glm\glm.hpp"
-#include "glm\gtc\matrix_transform.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 
 #include <iostream>
 
@@ -22,8 +26,9 @@ int main() {
 	if (!glfwInit())
 		return -1;
 
+	const char* glsl_version = "#version 150";
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	window = glfwCreateWindow(640, 480, "OpenGL_Testing", NULL, NULL);
@@ -70,13 +75,9 @@ int main() {
 
 		// projection: screen transform (converts into -1 to 1 space)
 		glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
-		                            // -x    x     -y     y     -z     z
+									// -x    x     -y     y     -z     z
 		// view: camera transform
 		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-1, 0, 0));
-		// model: object transform
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(1, 1, 0));
-
-		glm::mat4 mvp = proj * view * model;
 
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
@@ -84,7 +85,6 @@ int main() {
 		Texture texture("res/textures/star.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
-		shader.SetUniformMat4f("u_MVP", mvp);
 
 		va.Unbind();
 		vb.Unbind();
@@ -94,14 +94,35 @@ int main() {
 
 		Renderer renderer;
 
+		ImGui::CreateContext();
+		ImGui_ImplGlfw_InitForOpenGL(window, true);
+		ImGui_ImplOpenGL3_Init(glsl_version);
+
+		ImGui::StyleColorsDark();
+
+		bool show_demo_window = true;
+		bool show_another_window = false;
+		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+		glm::vec3 translation(1, 1, 0);
+
 		float r = 0.0f;
 		float increment = 0.05f;
 		while (!glfwWindowShouldClose(window)) {
 			renderer.Clear();
 
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+
 			texture.Bind();
 			shader.Bind();
 			shader.SetUniform4f("u_Color", r, 1.0f - r, 0.0f, 1.0f);
+
+			// model: object transform
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
+			glm::mat4 mvp = proj * view * model;
+			shader.SetUniformMat4f("u_MVP", mvp);
 
 			renderer.Draw(va, ib, shader);
 
@@ -115,10 +136,26 @@ int main() {
 				r = 0.0f;
 			}
 
+			{
+				static float f = 0.0f;
+				ImGui::Begin("Debug");
+				ImGui::SliderFloat3("Translation", &translation.x, -1.0f, 1.0f);
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+				ImGui::End();
+			}
+
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 		}
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
 	glfwTerminate();
 	return 0;
 }
