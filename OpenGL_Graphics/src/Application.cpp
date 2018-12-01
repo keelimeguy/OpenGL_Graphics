@@ -68,7 +68,15 @@ int main() {
 
 		IndexBuffer ib(indices, 6);
 
+		// projection: screen transform (converts into -1 to 1 space)
 		glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
+		                            // -x    x     -y     y     -z     z
+		// view: camera transform
+		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-1, 0, 0));
+		// model: object transform
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(1, 1, 0));
+
+		glm::mat4 mvp = proj * view * model;
 
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
@@ -76,7 +84,7 @@ int main() {
 		Texture texture("res/textures/star.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
-		shader.SetUniformMat4f("u_MVP", proj);
+		shader.SetUniformMat4f("u_MVP", mvp);
 
 		va.Unbind();
 		vb.Unbind();
