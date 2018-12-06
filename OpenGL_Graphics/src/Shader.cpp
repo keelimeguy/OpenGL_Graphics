@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-Shader::Shader(const std::string& filePath) 
+Shader::Shader(const std::string& filePath)
 	: m_FilePath(filePath)
 {
 	ShaderProgramSource source = ParseShader(filePath);
@@ -54,7 +54,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 		GLCALL(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
 		char* message = (char*)alloca(length * sizeof(char));
 		GLCALL(glGetShaderInfoLog(id, length, &length, message));
-		std::cout << message << std::endl;
+		std::cout << length << ": " << message << std::endl << std::flush;
 		GLCALL(glDeleteShader(id));
 		ASSERT(false);
 	}

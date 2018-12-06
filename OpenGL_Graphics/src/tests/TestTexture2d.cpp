@@ -6,7 +6,7 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-
+#include <iostream>
 namespace test {
 	TestTexture2d::TestTexture2d()
 		: m_translation(0, 0, 0), m_translation_static(320, 240, 0)
